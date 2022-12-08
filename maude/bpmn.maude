@@ -1,0 +1,4 @@
+mod BPMN-SEM is
+    including CONFIGURATION .
+
+endm

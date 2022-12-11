@@ -210,5 +210,50 @@ mod BPMN-SEM is
 	if T' := mte(TokenSet) /\ 0 < T' .
 
 
-    
+    *****************************
+            --- FLUJO ---
+    *****************************
+	rl [Start] : < O : Process | nodes: (start(id1, id2), NodeSet), 
+		flows: (flow(id2, T), FlowSet), tokens: (token(id1, 0), TokenSet), gtime: 0, Atts > 
+	=> < O : Process | nodes: (start(id1, id2), NodeSet), 
+		flows: (flow(id2, T), FlowSet), tokens: (token(id2, T), TokenSet), gtime: 0, Atts > .
+
+	crl [Enter-Task] : < O : Process | nodes: (task(id1, TaskName, id2, id3, T, IdSet), NodeSet), 
+		flows: (flow(id2, T'), FlowSet), tokens: (token(id2, 0), TokenSet), resources: ResourceSet, Atts > 
+	=> < O : Process | nodes: (task(id1, TaskName, id2, id3, T, IdSet), NodeSet), 
+		flows: (flow(id2, T'), FlowSet), tokens: (token(id1, T), TokenSet), resources: removeResources(ResourceSet, IdSet), Atts >
+        if hasResources(ResourceSet, IdSet) .
+
+	rl [Enter-Flow] : < O : Process | nodes: (task(id1, TaskName, id2, id3, T, IdSet), NodeSet), 
+		flows: (flow(id3, T'), FlowSet), tokens: (token(id1, 0), TokenSet), resources: ResourceSet, Atts > 
+	=> < O : Process | nodes: (task(id1, TaskName, id2, id3, T, IdSet), NodeSet), 
+		flows: (flow(id3, T'), FlowSet), tokens: (token(id3, T'), TokenSet), resources: addResources(ResourceSet, IdSet), Atts > .
+
+  	rl [End] : < O : Process | nodes: (end(id1, id2), NodeSet), 
+		flows: (flow(id2, T'), FlowSet), tokens: (token(id2, 0), TokenSet), Atts > 
+  	=> < O : Process | nodes: (end(id1, id2), NodeSet), 
+		flows: (flow(id2, T'), FlowSet), tokens: (empty), Atts > .
+
+    crl [Merge-Exclusive] : < O : Process | nodes: (merge(id1, exclusive, IdSet, id4), NodeSet), 
+		flows: (flow(id2, T), flow(id4, T'), FlowSet), tokens: (token(id2, 0), TokenSet), Atts > 
+	=> < O : Process | nodes: (merge(id1, exclusive, IdSet, id4), NodeSet), 
+		flows: (flow(id2, T), flow(id4, T'), FlowSet), tokens: (token(id4, T'), TokenSet), Atts > 
+    if id2 in IdSet .
+
+    crl [Split-Exclusive] : < O : Process | nodes: (split(id1, exclusive, id2, IdSet), NodeSet), 
+		flows: (flow(id2, T), flow(id3, T'), FlowSet), tokens: (token(id2, 0), TokenSet), Atts > 
+	=> < O : Process | nodes: (split(id1, exclusive, id2, IdSet), NodeSet), 
+		flows: (flow(id2, T), flow(id3, T'), FlowSet), tokens: (token(id3, T'), TokenSet), Atts > 
+    if id3 in IdSet .
+
+    crl [Merge-Parallel] : < O : Process | nodes: (merge(id1, parallel, IdSet, id4), NodeSet), 
+		flows: (flow(id4, T'), FlowSet), tokens: (TokenSet), Atts > 
+	=> < O : Process | nodes: (merge(id1, parallel, IdSet, id4), NodeSet), 
+		flows: (flow(id4, T'), FlowSet), tokens: (token(id4, T'), findTokensNotInIdSet(TokenSet, IdSet)), Atts > 
+    if isTokenSetReady(TokenSet, IdSet) . 
+
+    rl [Split-Parallel] : < O : Process | nodes: (split(id1, parallel, id2, IdSet), NodeSet), 
+		flows: (flow(id2, T), FlowSet), tokens: (token(id2, 0), TokenSet), Atts > 
+	=> < O : Process | nodes: (split(id1, parallel, id2, IdSet), NodeSet), 
+		flows: (flow(id2, T), FlowSet), tokens: (getTokenSetFromFlowSetAndIdSet(FlowSet, IdSet), TokenSet), Atts > .
 endm

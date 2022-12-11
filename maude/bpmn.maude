@@ -62,6 +62,7 @@ endfm
 view Flow from TRIV to FLOW is 
     sort Elt to Flow .
 endv
+
 --- TOKENS ---
 fmod Token is
 	pr ID .
@@ -109,28 +110,80 @@ mod BPMN-SEM is
     var TokenSet : Set{Token} . 
 
     --- Devuelve true si todos los tokens del set de Id's tengan el temporizador a 0
-    op tokenSetReady : Set{Token} Set{Id} -> Bool .
-    eq tokenSetReady (empty, IdSet) = true .
-    eq tokenSetReady ((token(id1, T), TokenSet), IdSet) = 
+    op isTokenSetReady : Set{Token} Set{Id} -> Bool .
+    eq isTokenSetReady (empty, IdSet) = true .
+    eq isTokenSetReady ((token(id1, T), TokenSet), IdSet) = 
         if id1 in IdSet then 
-            T == 0 and tokenSetReady(TokenSet, IdSet) 
+            T == 0 and isTokenSetReady(TokenSet, IdSet) 
         else 
-            tokenSetReady(TokenSet, IdSet)
-        fi .
-    
-    --- red tokenSetReady((token(id("00"), 0), token(id("01"), 0), token(id("02"), 5)), (id("00"), id("01"))) . --- Devuelve true porque todos los token's en el set de id's están con temporizador 0
-    --- red tokenSetReady((token(id("00"), 0), token(id("01"), 5), token(id("02"), 0)), (id("00"), id("02"))) . --- Devuelve false porque no tiene el token con id 02 con temporizador 5
+            isTokenSetReady(TokenSet, IdSet)
+        fi .  
+    --- red isTokenSetReady((token(id("00"), 0), token(id("01"), 0), token(id("02"), 5)), (id("00"), id("01"))) . --- Devuelve true porque todos los token's en el set de id's están con temporizador 0
+    --- red isTokenSetReady((token(id("00"), 0), token(id("01"), 5), token(id("02"), 0)), (id("00"), id("02"))) . --- Devuelve false porque no tiene el token con id 02 con temporizador 5
 
     --- Devuelve lista de Tokens que no están en el set de Id's
-    op deleteTokensInIdSet : Set{Token} Set{Id} -> Set{Token} .
-    eq deleteTokensInIdSet (empty, IdSet) = empty .
-    eq deleteTokensInIdSet ((token(id1, T), TokenSet), IdSet) = 
+    op findTokensNotInIdSet : Set{Token} Set{Id} -> Set{Token} .
+    eq findTokensNotInIdSet (empty, IdSet) = empty .
+    eq findTokensNotInIdSet ((token(id1, T), TokenSet), IdSet) = 
         if id1 in IdSet then 
-            deleteTokensInIdSet(TokenSet, IdSet) 
+            findTokensNotInIdSet(TokenSet, IdSet) 
         else 
-            (token(id1, T) , deleteTokensInIdSet (TokenSet, IdSet))
+            (token(id1, T) , findTokensNotInIdSet (TokenSet, IdSet))
         fi .
+    --- red findTokensNotInIdSet((token(id("00"), 0), token(id("01"), 0), token(id("02"), 0), token(id("03"), 0)), (id("00"), id("01"))) .
 
-    --- red deleteTokensInIdSet((token(id("00"), 0), token(id("01"), 0), token(id("02"), 0), token(id("03"), 0)), (id("00"), id("01"))) .
+    --- Devuelve el tiempo del flow del id
+    op getTimeFromFlowSetAndId : Set{Flow} Id -> Time .
+    eq getTimeFromFlowSetAndId (empty, id1) = 0 .
+    eq getTimeFromFlowSetAndId (flow(id1, T), id1) = T .
+    ceq getTimeFromFlowSetAndId ((flow(id2, T), FlowSet), id1) = getTimeFromFlowSetAndId(FlowSet, id1) if id2 =/= id1 .
+    --- red getTimeFromFlowSetAndId ((flow(id("00"), 3), flow(id("01"), 6), flow(id("02"), 10)), id("01")) .
+  
+    --- Devuelve una lista de tokens .
+    op getTokenSetFromFlowSetAndIdSet : Set{Flow} Set{Id} -> Set{Token} .
+    eq getTokenSetFromFlowSetAndIdSet (FlowSet, empty) = empty .
+    eq getTokenSetFromFlowSetAndIdSet (FlowSet, (id1, IdSet)) = token(id1, getTimeFromFlowSetAndId(FlowSet, id1)), getTokenSetFromFlowSetAndIdSet(FlowSet, IdSet) .
+    --- red getTokenSetFromFlowSetAndIdSet((flow(id("00"), 15), flow(id("01"), 20), flow(id("02"), 30), flow(id("04"), 30)), (id("00"), id("01"), id("02"))) .
+
+    ********************************
+            --- RECURSOS ---
+    ********************************
+    --- Devuelve true si hay un recurso disponible para ese id
+    op isResourceAvailable : Set{Resource} Id -> Bool .
+    eq isResourceAvailable ((resource(id1, N, s N'), ResourceSet), id1) = true .
+    eq isResourceAvailable (ResourceSet, id1) = false [owise] . 
+   --- red isResourceAvailable((resource(id("00"), 1, 0), resource(id("01"), 1, 1)), (id("01"))) . --- Devuelve TRUE
+   --- red isResourceAvailable((resource(id("00"), 1, 0), resource(id("01"), 1, 1)), (id("00"))) . --- Devuelve FALSE
+
+    --- Comprueba si disponinemos de los recursos suficientes
+    op hasResources : Set{Resource} Set{Id} -> Bool .
+    eq hasResources (ResourceSet, empty) = true .
+    eq hasResources (ResourceSet, (id1, IdSet)) = isResourceAvailable(ResourceSet, id1) and hasResources(ResourceSet, IdSet) . ---true si tiene ese recurso y el resto
+    --- red hasResources((resource(id("00"), 1, 1), resource(id("01"), 1, 1)), (id("00"), id("01"))) . --- Devuelve TRUE
+    --- red hasResources((resource(id("00"), 1, 1), resource(id("01"), 1, 0)), (id("00"), id("01"))) . --- Devuelve FALSE
+    
+    --- Quita un recurso a todos los que estén en el set de Id
+    op removeResources : Set{Resource} Set{Id} -> Set{Resource} .   
+    eq removeResources (empty, IdSet) = empty .
+    eq removeResources ((resource(id1, N, 0), ResourceSet), IdSet) = resource(id1, N, 0), removeResources(ResourceSet, IdSet) . 
+    eq removeResources ((resource(id1, N, s N'), ResourceSet), IdSet) =
+    if id1 in IdSet then
+        resource(id1, N, N'), removeResources(ResourceSet, IdSet)
+    else 
+        resource(id1, N, s N'), removeResources(ResourceSet, IdSet)
+    fi .
+    --- red removeResources ((resource(id("00"), 1, 1), resource(id("01"), 1, 1), resource(id("02"), 1, 0)), (id("00"), id("01")))
+    
+    --- Añadir un recurso a todos los que estén en el set de Id
+    op addResources : Set{Resource} Set{Id} -> Set{Resource} .
+    eq addResources (empty, IdSet) = empty .
+    eq addResources ((resource(id1, N, N'), ResourceSet), IdSet) =
+    if id1 in IdSet then
+        resource(id1, N, s N'), removeResources(ResourceSet, IdSet)
+    else 
+        resource(id1, N, N'), removeResources(ResourceSet, IdSet)
+    fi .
+    --- red addResources ((resource(id("00"), 1, 0), resource(id("01"), 1, 1), resource(id("02"), 1, 0)), (id("00"), id("01")))
+    --- NO FUNCIONA! SOLO LO APLICA AL PRIMERO ID EN EL SET
 
 endm

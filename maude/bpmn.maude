@@ -109,6 +109,9 @@ mod BPMN-SEM is
     var FlowSet : Set{Flow} .
     var TokenSet : Set{Token} . 
 
+    **********************************
+            --- AUXILIARES ---
+    **********************************
     --- Devuelve true si todos los tokens del set de Id's tengan el temporizador a 0
     op isTokenSetReady : Set{Token} Set{Id} -> Bool .
     eq isTokenSetReady (empty, IdSet) = true .
@@ -145,6 +148,7 @@ mod BPMN-SEM is
     eq getTokenSetFromFlowSetAndIdSet (FlowSet, (id1, IdSet)) = token(id1, getTimeFromFlowSetAndId(FlowSet, id1)), getTokenSetFromFlowSetAndIdSet(FlowSet, IdSet) .
     --- red getTokenSetFromFlowSetAndIdSet((flow(id("00"), 15), flow(id("01"), 20), flow(id("02"), 30), flow(id("04"), 30)), (id("00"), id("01"), id("02"))) .
 
+
     ********************************
             --- RECURSOS ---
     ********************************
@@ -179,11 +183,32 @@ mod BPMN-SEM is
     eq addResources (empty, IdSet) = empty .
     eq addResources ((resource(id1, N, N'), ResourceSet), IdSet) =
     if id1 in IdSet then
-        resource(id1, N, s N'), removeResources(ResourceSet, IdSet)
+        resource(id1, N, s N'), addResources(ResourceSet, IdSet)
     else 
-        resource(id1, N, N'), removeResources(ResourceSet, IdSet)
+        resource(id1, N, N'), addResources(ResourceSet, IdSet)
     fi .
     --- red addResources ((resource(id("00"), 1, 0), resource(id("01"), 1, 1), resource(id("02"), 1, 0)), (id("00"), id("01")))
-    --- NO FUNCIONA! SOLO LO APLICA AL PRIMERO ID EN EL SET
 
+
+    ******************************
+            --- TIEMPO ---
+    ******************************
+    op delta : Set{Token} Time -> Set{Token} .
+    eq delta (empty, T) = empty .
+    ceq delta ((token(id1, T), TokenSet), T') = (token(id1, T monus T'), delta(TokenSet, T')) if T gt T' .
+    eq delta ((token(id1, T), TokenSet), T') = (token(id1, 0), delta(TokenSet, T')) [owise] .
+    --- red delta((token(id("00"), 6), token(id("01"), 10), token(id("02"), 20)), 2) . -- Resta Time al set de tokens
+
+    op mte : Set{Token} -> TimeInf .
+    eq mte ((token(id1, T), empty)) = T .
+    eq mte ((token(id1, T), TokenSet)) = minimum(T, mte(TokenSet)) .
+    ---  red mte((token(id("00"), 6), token(id("01"), 1), token(id("02"), 20))) . --- Devuelve el mínimo tiempo del set de tokens
+
+	crl [tick] :
+    	< O : Process | gtime: T, tokens: TokenSet, Atts >
+    	=> < O : Process | gtime: T + T', tokens: delta(TokenSet, T'), Atts >
+	if T' := mte(TokenSet) /\ 0 < T' .
+
+
+    
 endm

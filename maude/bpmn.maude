@@ -191,7 +191,8 @@ mod BPMN-SEM is
 	crl [tick] :
     	< O : Process | gtime: T, tokens: TokenSet, Atts >
     	=> < O : Process | gtime: T + T', tokens: delta(TokenSet, T'), Atts >
-	if T' := mte(TokenSet) /\ 0 < T' .
+	if T' := mte(TokenSet) /\ 0 < T' 
+    /\ (T + T') < 100 .
 
 
     *****************************

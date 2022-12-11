@@ -1,0 +1,259 @@
+load time.maude
+
+--- IDENTIFICADORES ---
+fmod ID is 
+	pr STRING .
+
+	sort Id .
+	op id : String -> Id [ctor] .
+endfm 
+
+view Id from TRIV to ID is 
+    sort Elt to Id .
+endv
+
+--- PUERTAS ---
+fmod GATEWAY is
+    sort Gateway .
+    op exclusive : -> Gateway [ctor] .
+    op parallel : -> Gateway [ctor] .
+endfm
+
+--- NODOS ---
+fmod NODE is 
+	pr SET{Id} .
+	pr GATEWAY .
+	pr STRING .
+	pr POSRAT-TIME-DOMAIN-WITH-INF .
+	
+	sort Node .
+	op start : Id Id -> Node [ctor] .
+	op end : Id Id -> Node [ctor] .
+	op task : Id String Id Id Time Set{Id} -> Node [ctor] .
+	op split : Id Gateway Id Set{Id} -> Node [ctor] .
+	op merge : Id Gateway Set{Id} Id -> Node [ctor] .
+endfm
+
+view Node from TRIV to NODE is 
+    sort Elt to Node .
+endv
+
+--- RECURSOS ---
+fmod RESOURCE is
+    pr ID .
+
+    sort Resource .
+    op resource : Id Nat Nat -> Resource [ctor] .
+endfm
+
+view Resource from TRIV to RESOURCE is 
+    sort Elt to Resource .
+endv
+
+--- FLUJOS ---
+fmod FLOW is 
+	pr ID .
+	pr POSRAT-TIME-DOMAIN-WITH-INF .
+
+	sort Flow .
+	op flow : Id Time -> Flow [ctor] .
+endfm 
+
+view Flow from TRIV to FLOW is 
+    sort Elt to Flow .
+endv
+
+--- TOKENS ---
+fmod Token is
+	pr ID .
+	pr POSRAT-TIME-DOMAIN-WITH-INF .
+
+	sort Token .
+	op token : Id Time -> Token [ctor] .
+endfm
+
+view Token from TRIV to Token is 
+    sort Elt to Token .
+endv
+
+--- CLASE PROCESS ---
+mod BPMN-SEM is
+    pr SET{Id} .
+    pr SET{Node} .
+    pr SET{Resource} .
+    pr SET{Flow} .
+    pr SET{Token} .
+    inc CONFIGURATION .
+
+    sort Process .
+    subsort Process < Cid .
+
+    ---- class Process | nodes: Set{Node}, flows: Set{Flow}, tokens: Set{Token}, gtime: Time, resources: Set{Resource} .
+    op Process : -> Process [ctor] .
+    op nodes:_ :        Set{Node}       -> Attribute [gather (&)] .
+    op flows:_ :        Set{Flow}       -> Attribute [gather (&)] .
+    op tokens:_ :       Set{Token}      -> Attribute [gather (&)] .
+    op gtime:_ :        Time            -> Attribute [gather (&)] .
+    op resources:_ :    Set{Resource}   -> Attribute [gather (&)] . 
+
+    vars O : Oid .
+    vars N N' : Nat .
+    vars T T' T'' : Time .
+    var Atts : AttributeSet .
+    var Token : Token .
+    var id1 id2 id3 id4 : Id .
+    var IdSet : Set{Id} .
+    var NodeSet : Set{Node} .
+    var TaskName : String .
+    var ResourceSet : Set{Resource} .  
+    var FlowSet : Set{Flow} .
+    var TokenSet : Set{Token} . 
+
+    **********************************
+            --- AUXILIARES ---
+    **********************************
+    --- Devuelve true si todos los tokens del set de Id's tengan el temporizador a 0
+    op isTokenSetReady : Set{Token} Set{Id} -> Bool .
+    eq isTokenSetReady (empty, IdSet) = true .
+    eq isTokenSetReady ((token(id1, T), TokenSet), IdSet) = 
+        if id1 in IdSet then 
+            T == 0 and isTokenSetReady(TokenSet, IdSet) 
+        else 
+            isTokenSetReady(TokenSet, IdSet)
+        fi .  
+    --- red isTokenSetReady((token(id("00"), 0), token(id("01"), 0), token(id("02"), 5)), (id("00"), id("01"))) . --- Devuelve true porque todos los token's en el set de id's están con temporizador 0
+    --- red isTokenSetReady((token(id("00"), 0), token(id("01"), 5), token(id("02"), 0)), (id("00"), id("02"))) . --- Devuelve false porque no tiene el token con id 02 con temporizador 5
+
+    --- Devuelve lista de Tokens que no están en el set de Id's
+    op findTokensNotInIdSet : Set{Token} Set{Id} -> Set{Token} .
+    eq findTokensNotInIdSet (empty, IdSet) = empty .
+    eq findTokensNotInIdSet ((token(id1, T), TokenSet), IdSet) = 
+        if id1 in IdSet then 
+            findTokensNotInIdSet(TokenSet, IdSet) 
+        else 
+            (token(id1, T) , findTokensNotInIdSet (TokenSet, IdSet))
+        fi .
+    --- red findTokensNotInIdSet((token(id("00"), 0), token(id("01"), 0), token(id("02"), 0), token(id("03"), 0)), (id("00"), id("01"))) .
+
+    --- Devuelve el tiempo del flow del id
+    op getTimeFromFlowSetAndId : Set{Flow} Id -> Time .
+    eq getTimeFromFlowSetAndId (empty, id1) = 0 .
+    eq getTimeFromFlowSetAndId (flow(id1, T), id1) = T .
+    ceq getTimeFromFlowSetAndId ((flow(id2, T), FlowSet), id1) = getTimeFromFlowSetAndId(FlowSet, id1) if id2 =/= id1 .
+    --- red getTimeFromFlowSetAndId ((flow(id("00"), 3), flow(id("01"), 6), flow(id("02"), 10)), id("01")) .
+  
+    --- Devuelve una lista de tokens .
+    op getTokenSetFromFlowSetAndIdSet : Set{Flow} Set{Id} -> Set{Token} .
+    eq getTokenSetFromFlowSetAndIdSet (FlowSet, empty) = empty .
+    eq getTokenSetFromFlowSetAndIdSet (FlowSet, (id1, IdSet)) = token(id1, getTimeFromFlowSetAndId(FlowSet, id1)), getTokenSetFromFlowSetAndIdSet(FlowSet, IdSet) .
+    --- red getTokenSetFromFlowSetAndIdSet((flow(id("00"), 15), flow(id("01"), 20), flow(id("02"), 30), flow(id("04"), 30)), (id("00"), id("01"), id("02"))) .
+
+
+    ********************************
+            --- RECURSOS ---
+    ********************************
+    --- Devuelve true si hay un recurso disponible para ese id
+    op isResourceAvailable : Set{Resource} Id -> Bool .
+    eq isResourceAvailable ((resource(id1, N, s N'), ResourceSet), id1) = true .
+    eq isResourceAvailable (ResourceSet, id1) = false [owise] . 
+   --- red isResourceAvailable((resource(id("00"), 1, 0), resource(id("01"), 1, 1)), (id("01"))) . --- Devuelve TRUE
+   --- red isResourceAvailable((resource(id("00"), 1, 0), resource(id("01"), 1, 1)), (id("00"))) . --- Devuelve FALSE
+
+    --- Comprueba si disponinemos de los recursos suficientes
+    op hasResources : Set{Resource} Set{Id} -> Bool .
+    eq hasResources (ResourceSet, empty) = true .
+    eq hasResources (ResourceSet, (id1, IdSet)) = isResourceAvailable(ResourceSet, id1) and hasResources(ResourceSet, IdSet) . ---true si tiene ese recurso y el resto
+    --- red hasResources((resource(id("00"), 1, 1), resource(id("01"), 1, 1)), (id("00"), id("01"))) . --- Devuelve TRUE
+    --- red hasResources((resource(id("00"), 1, 1), resource(id("01"), 1, 0)), (id("00"), id("01"))) . --- Devuelve FALSE
+    
+    --- Quita un recurso a todos los que estén en el set de Id
+    op removeResources : Set{Resource} Set{Id} -> Set{Resource} .   
+    eq removeResources (empty, IdSet) = empty .
+    eq removeResources ((resource(id1, N, 0), ResourceSet), IdSet) = resource(id1, N, 0), removeResources(ResourceSet, IdSet) . 
+    eq removeResources ((resource(id1, N, s N'), ResourceSet), IdSet) =
+    if id1 in IdSet then
+        resource(id1, N, N'), removeResources(ResourceSet, IdSet)
+    else 
+        resource(id1, N, s N'), removeResources(ResourceSet, IdSet)
+    fi .
+    --- red removeResources ((resource(id("00"), 1, 1), resource(id("01"), 1, 1), resource(id("02"), 1, 0)), (id("00"), id("01")))
+    
+    --- Añadir un recurso a todos los que estén en el set de Id
+    op addResources : Set{Resource} Set{Id} -> Set{Resource} .
+    eq addResources (empty, IdSet) = empty .
+    eq addResources ((resource(id1, N, N'), ResourceSet), IdSet) =
+    if id1 in IdSet then
+        resource(id1, N, s N'), addResources(ResourceSet, IdSet)
+    else 
+        resource(id1, N, N'), addResources(ResourceSet, IdSet)
+    fi .
+    --- red addResources ((resource(id("00"), 1, 0), resource(id("01"), 1, 1), resource(id("02"), 1, 0)), (id("00"), id("01")))
+
+
+    ******************************
+            --- TIEMPO ---
+    ******************************
+    op delta : Set{Token} Time -> Set{Token} .
+    eq delta (empty, T) = empty .
+    ceq delta ((token(id1, T), TokenSet), T') = (token(id1, T monus T'), delta(TokenSet, T')) if T gt T' .
+    eq delta ((token(id1, T), TokenSet), T') = (token(id1, 0), delta(TokenSet, T')) [owise] .
+    --- red delta((token(id("00"), 6), token(id("01"), 10), token(id("02"), 20)), 2) . -- Resta Time al set de tokens
+
+    op mte : Set{Token} -> TimeInf .
+    eq mte ((token(id1, T), empty)) = T .
+    eq mte ((token(id1, T), TokenSet)) = minimum(T, mte(TokenSet)) .
+    ---  red mte((token(id("00"), 6), token(id("01"), 1), token(id("02"), 20))) . --- Devuelve el mínimo tiempo del set de tokens
+
+	crl [tick] :
+    	< O : Process | gtime: T, tokens: TokenSet, Atts >
+    	=> < O : Process | gtime: T + T', tokens: delta(TokenSet, T'), Atts >
+	if T' := mte(TokenSet) /\ 0 < T' .
+
+
+    *****************************
+            --- FLUJO ---
+    *****************************
+	rl [Start] : < O : Process | nodes: (start(id1, id2), NodeSet), 
+		flows: (flow(id2, T), FlowSet), tokens: (token(id1, 0), TokenSet), gtime: 0, Atts > 
+	=> < O : Process | nodes: (start(id1, id2), NodeSet), 
+		flows: (flow(id2, T), FlowSet), tokens: (token(id2, T), TokenSet), gtime: 0, Atts > .
+
+	crl [Enter-Task] : < O : Process | nodes: (task(id1, TaskName, id2, id3, T, IdSet), NodeSet), 
+		flows: (flow(id2, T'), FlowSet), tokens: (token(id2, 0), TokenSet), resources: ResourceSet, Atts > 
+	=> < O : Process | nodes: (task(id1, TaskName, id2, id3, T, IdSet), NodeSet), 
+		flows: (flow(id2, T'), FlowSet), tokens: (token(id1, T), TokenSet), resources: removeResources(ResourceSet, IdSet), Atts >
+        if hasResources(ResourceSet, IdSet) .
+
+	rl [Enter-Flow] : < O : Process | nodes: (task(id1, TaskName, id2, id3, T, IdSet), NodeSet), 
+		flows: (flow(id3, T'), FlowSet), tokens: (token(id1, 0), TokenSet), resources: ResourceSet, Atts > 
+	=> < O : Process | nodes: (task(id1, TaskName, id2, id3, T, IdSet), NodeSet), 
+		flows: (flow(id3, T'), FlowSet), tokens: (token(id3, T'), TokenSet), resources: addResources(ResourceSet, IdSet), Atts > .
+
+  	rl [End] : < O : Process | nodes: (end(id1, id2), NodeSet), 
+		flows: (flow(id2, T'), FlowSet), tokens: (token(id2, 0), TokenSet), Atts > 
+  	=> < O : Process | nodes: (end(id1, id2), NodeSet), 
+		flows: (flow(id2, T'), FlowSet), tokens: (empty), Atts > .
+
+    crl [Merge-Exclusive] : < O : Process | nodes: (merge(id1, exclusive, IdSet, id4), NodeSet), 
+		flows: (flow(id2, T), flow(id4, T'), FlowSet), tokens: (token(id2, 0), TokenSet), Atts > 
+	=> < O : Process | nodes: (merge(id1, exclusive, IdSet, id4), NodeSet), 
+		flows: (flow(id2, T), flow(id4, T'), FlowSet), tokens: (token(id4, T'), TokenSet), Atts > 
+    if id2 in IdSet .
+
+    crl [Split-Exclusive] : < O : Process | nodes: (split(id1, exclusive, id2, IdSet), NodeSet), 
+		flows: (flow(id2, T), flow(id3, T'), FlowSet), tokens: (token(id2, 0), TokenSet), Atts > 
+	=> < O : Process | nodes: (split(id1, exclusive, id2, IdSet), NodeSet), 
+		flows: (flow(id2, T), flow(id3, T'), FlowSet), tokens: (token(id3, T'), TokenSet), Atts > 
+    if id3 in IdSet .
+
+    crl [Merge-Parallel] : < O : Process | nodes: (merge(id1, parallel, IdSet, id4), NodeSet), 
+		flows: (flow(id4, T'), FlowSet), tokens: (TokenSet), Atts > 
+	=> < O : Process | nodes: (merge(id1, parallel, IdSet, id4), NodeSet), 
+		flows: (flow(id4, T'), FlowSet), tokens: (token(id4, T'), findTokensNotInIdSet(TokenSet, IdSet)), Atts > 
+    if isTokenSetReady(TokenSet, IdSet) . 
+
+    rl [Split-Parallel] : < O : Process | nodes: (split(id1, parallel, id2, IdSet), NodeSet), 
+		flows: (flow(id2, T), FlowSet), tokens: (token(id2, 0), TokenSet), Atts > 
+	=> < O : Process | nodes: (split(id1, parallel, id2, IdSet), NodeSet), 
+		flows: (flow(id2, T), FlowSet), tokens: (getTokenSetFromFlowSetAndIdSet(FlowSet, IdSet), TokenSet), Atts > .
+endm

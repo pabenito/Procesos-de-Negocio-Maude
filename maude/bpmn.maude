@@ -1,4 +1,136 @@
+load time.maude
+
+--- IDENTIFICADORES ---
+fmod ID is 
+	pr STRING .
+
+	sort Id .
+	op id : String -> Id [ctor] .
+endfm 
+
+view Id from TRIV to ID is 
+    sort Elt to Id .
+endv
+
+--- PUERTAS ---
+fmod GATEWAY is
+    sort Gateway .
+    op exclusive : -> Gateway [ctor] .
+    op parallel : -> Gateway [ctor] .
+endfm
+
+--- NODOS ---
+fmod NODE is 
+	pr SET{Id} .
+	pr GATEWAY .
+	pr STRING .
+	pr POSRAT-TIME-DOMAIN-WITH-INF .
+	
+	sort Node .
+	op start : Id Id -> Node [ctor] .
+	op end : Id Id -> Node [ctor] .
+	op task : Id String Id Id Time Set{Id} -> Node [ctor] .
+	op split : Id Gateway Id Set{Id} -> Node [ctor] .
+	op merge : Id Gateway Set{Id} Id -> Node [ctor] .
+endfm
+
+view Node from TRIV to NODE is 
+    sort Elt to Node .
+endv
+
+--- RECURSOS ---
+fmod RESOURCE is
+    pr ID .
+
+    sort Resource .
+    op resource : Id Nat Nat -> Resource [ctor] .
+endfm
+
+view Resource from TRIV to RESOURCE is 
+    sort Elt to Resource .
+endv
+
+--- FLUJOS ---
+fmod FLOW is 
+	pr ID .
+	pr POSRAT-TIME-DOMAIN-WITH-INF .
+
+	sort Flow .
+	op flow : Id Time -> Flow [ctor] .
+endfm 
+
+view Flow from TRIV to FLOW is 
+    sort Elt to Flow .
+endv
+--- TOKENS ---
+fmod Token is
+	pr ID .
+	pr POSRAT-TIME-DOMAIN-WITH-INF .
+
+	sort Token .
+	op token : Id Time -> Token [ctor] .
+endfm
+
+view Token from TRIV to Token is 
+    sort Elt to Token .
+endv
+
+--- CLASE PROCESS ---
 mod BPMN-SEM is
-    including CONFIGURATION .
+    pr SET{Id} .
+    pr SET{Node} .
+    pr SET{Resource} .
+    pr SET{Flow} .
+    pr SET{Token} .
+    inc CONFIGURATION .
+
+    sort Process .
+    subsort Process < Cid .
+
+    ---- class Process | nodes: Set{Node}, flows: Set{Flow}, tokens: Set{Token}, gtime: Time, resources: Set{Resource} .
+    op Process : -> Process [ctor] .
+    op nodes:_ :        Set{Node}       -> Attribute [gather (&)] .
+    op flows:_ :        Set{Flow}       -> Attribute [gather (&)] .
+    op tokens:_ :       Set{Token}      -> Attribute [gather (&)] .
+    op gtime:_ :        Time            -> Attribute [gather (&)] .
+    op resources:_ :    Set{Resource}   -> Attribute [gather (&)] . 
+
+    vars O : Oid .
+    vars N N' : Nat .
+    vars T T' T'' : Time .
+    var Atts : AttributeSet .
+    var Token : Token .
+    var id1 id2 id3 id4 : Id .
+    var IdSet : Set{Id} .
+    var NodeSet : Set{Node} .
+    var TaskName : String .
+    var ResourceSet : Set{Resource} .  
+    var FlowSet : Set{Flow} .
+    var TokenSet : Set{Token} . 
+
+    --- Devuelve true si todos los tokens del set de Id's tengan el temporizador a 0
+    op tokenSetReady : Set{Token} Set{Id} -> Bool .
+    eq tokenSetReady (empty, IdSet) = true .
+    eq tokenSetReady ((token(id1, T), TokenSet), IdSet) = 
+        if id1 in IdSet then 
+            T == 0 and tokenSetReady(TokenSet, IdSet) 
+        else 
+            tokenSetReady(TokenSet, IdSet)
+        fi .
+    
+    --- red tokenSetReady((token(id("00"), 0), token(id("01"), 0), token(id("02"), 5)), (id("00"), id("01"))) . --- Devuelve true porque todos los token's en el set de id's están con temporizador 0
+    --- red tokenSetReady((token(id("00"), 0), token(id("01"), 5), token(id("02"), 0)), (id("00"), id("02"))) . --- Devuelve false porque no tiene el token con id 02 con temporizador 5
+
+    --- Devuelve lista de Tokens que no están en el set de Id's
+    op deleteTokensInIdSet : Set{Token} Set{Id} -> Set{Token} .
+    eq deleteTokensInIdSet (empty, IdSet) = empty .
+    eq deleteTokensInIdSet ((token(id1, T), TokenSet), IdSet) = 
+        if id1 in IdSet then 
+            deleteTokensInIdSet(TokenSet, IdSet) 
+        else 
+            (token(id1, T) , deleteTokensInIdSet (TokenSet, IdSet))
+        fi .
+
+    --- red deleteTokensInIdSet((token(id("00"), 0), token(id("01"), 0), token(id("02"), 0), token(id("03"), 0)), (id("00"), id("01"))) .
 
 endm

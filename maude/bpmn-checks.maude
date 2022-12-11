@@ -1,5 +1,6 @@
 sload ex-process-2.maude 
 
+red isTokenSetReady(token(id("00"), 0), id("00")) == true .
 red isTokenSetReady((token(id("00"), 0), token(id("01"), 0), token(id("02"), 5)), (id("00"), id("01"))) == true . --- Devuelve true porque todos los token's en el set de id's están con temporizador 0
 red isTokenSetReady((token(id("00"), 0), token(id("01"), 5), token(id("02"), 0)), (id("00"), id("01"))) == false . --- Devuelve false porque tiene el token con id 01 con temporizador 5
 

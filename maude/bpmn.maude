@@ -115,12 +115,19 @@ mod BPMN-SEM is
     --- Devuelve true si todos los tokens del set de Id's tengan el temporizador a 0
     op isTokenSetReady : Set{Token} Set{Id} -> Bool .
     eq isTokenSetReady (empty, IdSet) = true .
-    eq isTokenSetReady ((token(id1, T), TokenSet), IdSet) = 
+    eq isTokenSetReady ((token(id1, T), empty), IdSet) = 
+        if id1 in IdSet then 
+            T == 0
+        else 
+            true
+        fi .
+    ceq isTokenSetReady ((token(id1, T), TokenSet), IdSet) = 
         if id1 in IdSet then 
             T == 0 and isTokenSetReady(TokenSet, IdSet) 
         else 
             isTokenSetReady(TokenSet, IdSet)
-        fi .  
+        fi 
+        if TokenSet =/= empty .
 
     --- Devuelve lista de Tokens que no están en el set de Id's
     op findTokensNotInIdSet : Set{Token} Set{Id} -> Set{Token} .
@@ -190,9 +197,9 @@ mod BPMN-SEM is
 
 	crl [tick] :
     	< O : Process | gtime: T, tokens: TokenSet, Atts >
-    	=> < O : Process | gtime: T + T', tokens: delta(TokenSet, T'), Atts >
-	if T' := mte(TokenSet) /\ 0 < T' 
-    /\ (T + T') < 100 .
+    	=> < O : Process | gtime: T plus T', tokens: delta(TokenSet, T'), Atts >
+	if T' := mte(TokenSet) /\ 0 lt T' 
+    /\ (T plus T') le 100 .
 
 
     *****************************

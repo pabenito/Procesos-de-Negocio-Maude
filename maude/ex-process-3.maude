@@ -72,7 +72,3 @@ mod BPMN-EX is
                     resource(id("car"), 1, 1), 
                     resource(id("drone"), 1, 1)) > .
 endm
-
---- Se quedan en un loop infinito... Puede ser que no esté bien la ultima condición donde decimos: AND Tiempo <= 100. También puede ser porque tenemos que añadir limites como hacen en el ex-2-checker (search [2]...)
---- search PROCESS =>! < o : Process | tokens: Tks:Set{Token}, gtime: T:Time, Atts:AttributeSet > such that Tks:Set{Token} =/= empty /\ T:Time le 100 .
---- search PROCESS =>* < o : Process | tokens: empty, gtime: T:Time, Atts:AttributeSet > such that T:Time le 100 .

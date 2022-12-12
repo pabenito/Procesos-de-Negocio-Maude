@@ -1,3 +1,13 @@
 sload ex-process-3.maude 
 
-search PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .
+---search [1] PROCESS =>* < o : Process | tokens: token(id("f00"), 0), Atts:AttributeSet > .
+---search [1] PROCESS =>* < o : Process | tokens: token(id("f03"), 0), Atts:AttributeSet > .
+---search [1] PROCESS =>* < o : Process | tokens: token(id("f06"), 0), Atts:AttributeSet > .
+---search [1] PROCESS =>* < o : Process | tokens: token(id("f05"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("f08"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("f09"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("f10"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: (token(id("n11"), 0), TokenSet:Set{Token}), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: (token(id("n14"), 0), TokenSet:Set{Token}), Atts:AttributeSet > .
+
+---search [1] PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .

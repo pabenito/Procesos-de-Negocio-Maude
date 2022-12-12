@@ -114,17 +114,11 @@ mod BPMN-SEM is
     **********************************
     --- Devuelve true si todos los tokens del set de Id's tengan el temporizador a 0
     op isTokenSetReady : Set{Token} Set{Id} -> Bool .
-    eq isTokenSetReady (empty, IdSet) = false .
-    eq isTokenSetReady (token(id1, T), IdSet) = 
-        if id1 in IdSet then 
-            T =/= 0  
-        else 
-            false
-        fi .
-    ceq isTokenSetReady ((token(id1, T), TokenSet), IdSet) = 
-        isTokenSetReady (token(id1, T), IdSet) 
-        and isTokenSetReady(TokenSet, IdSet)
-        if TokenSet =/= empty .
+    eq isTokenSetReady (TokenSet, empty) = true .
+    ceq isTokenSetReady (empty, IdSet) = false 
+        if IdSet =/= empty .
+    eq isTokenSetReady ((token(id1, T), TokenSet), (id1, IdSet)) = 
+        T =/= 0 and isTokenSetReady(TokenSet, IdSet) .
 
     --- Devuelve lista de Tokens que no están en el set de Id's
     op findTokensNotInIdSet : Set{Token} Set{Id} -> Set{Token} .
@@ -163,11 +157,11 @@ mod BPMN-SEM is
     --- Quita un recurso a todos los que estén en el set de Id
     op removeResources : Set{Resource} Set{Id} -> Set{Resource} .   
     eq removeResources (empty, IdSet) = empty .
-    eq removeResources ((resource(id1, N, N'), ResourceSet), IdSet) =
+    eq removeResources ((resource(id1, N, s N'), ResourceSet), IdSet) =
     if id1 in IdSet then
-        removeResources(ResourceSet, IdSet)
-    else 
         resource(id1, N, N'), removeResources(ResourceSet, IdSet)
+    else 
+        resource(id1, N, s N'), removeResources(ResourceSet, IdSet)
     fi .
     
     --- Añadir un recurso a todos los que estén en el set de Id

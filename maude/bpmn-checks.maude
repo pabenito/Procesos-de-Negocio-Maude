@@ -1,4 +1,4 @@
-sload ex-process-2.maude 
+load ex-process-2.maude 
 
 red isTokenSetReady(token(id("00"), 0), id("00")) == true .
 red isTokenSetReady((token(id("00"), 0), token(id("01"), 0), token(id("02"), 5)), (id("00"), id("01"))) == true . --- Devuelve true porque todos los token's en el set de id's están con temporizador 0
@@ -16,7 +16,7 @@ red isResourceAvailable((resource(id("00"), 1, 0), resource(id("01"), 1, 1)), (i
 red hasResources((resource(id("00"), 1, 1), resource(id("01"), 1, 1)), (id("00"), id("01"))) == true . --- Devuelve TRUE
 red hasResources((resource(id("00"), 1, 1), resource(id("01"), 1, 0)), (id("00"), id("01"))) == false . --- Devuelve FALSE
 
-red removeResources ((resource(id("00"), 1, 1), resource(id("01"), 1, 1), resource(id("02"), 1, 0)), (id("00"), id("01"))) == resource(id("02"), 1, 0) .
+red removeResources ((resource(id("00"), 1, 1), resource(id("01"), 1, 1), resource(id("02"), 2, 2)), (id("00"), id("01"))) == (resource(id("00"), 1, 0), resource(id("01"), 1, 0), resource(id("02"), 2, 2)) .
 
 red delta((token(id("00"), 6), token(id("01"), 10), token(id("02"), 2)), 2) == (token(id("00"), 4), token(id("01"), 8), token(id("02"), 0)) . --- Resta Time al set de tokens
 

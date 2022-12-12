@@ -1,4 +1,3 @@
 sload ex-process-3.maude 
 
---- Se quedan en un loop infinito... Puede ser que no esté bien la ultima condición donde decimos: AND Tiempo <= 100. También puede ser porque tenemos que añadir limites como hacen en el ex-2-checker (search [2]...)
-search [2] PROCESS =>! < o : Process | tokens: Tks:Set{Token}, Atts:AttributeSet > such that Tks:Set{Token} =/= empty .
+search PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .

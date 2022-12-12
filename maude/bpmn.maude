@@ -114,19 +114,16 @@ mod BPMN-SEM is
     **********************************
     --- Devuelve true si todos los tokens del set de Id's tengan el temporizador a 0
     op isTokenSetReady : Set{Token} Set{Id} -> Bool .
-    eq isTokenSetReady (empty, IdSet) = true .
-    eq isTokenSetReady ((token(id1, T), empty), IdSet) = 
+    eq isTokenSetReady (empty, IdSet) = false .
+    eq isTokenSetReady (token(id1, T), IdSet) = 
         if id1 in IdSet then 
-            T == 0
+            T =/= 0  
         else 
-            true
+            false
         fi .
     ceq isTokenSetReady ((token(id1, T), TokenSet), IdSet) = 
-        if id1 in IdSet then 
-            T == 0 and isTokenSetReady(TokenSet, IdSet) 
-        else 
-            isTokenSetReady(TokenSet, IdSet)
-        fi 
+        isTokenSetReady (token(id1, T), IdSet) 
+        and isTokenSetReady(TokenSet, IdSet)
         if TokenSet =/= empty .
 
     --- Devuelve lista de Tokens que no están en el set de Id's

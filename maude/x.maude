@@ -19,6 +19,11 @@ search [1] PROCESS =>* < o : Process | tokens: token(id("f11"), 0), Atts:Attribu
 
 search [1] PROCESS =>* < o : Process | tokens: (token(id("f14"), 0), token(id("f15"), 0), token(id("f16"), 0)) , Atts:AttributeSet > .
 
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f14"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f15"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f16"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+
+
 search [1] PROCESS =>* < o : Process | tokens: (token(id("f24"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
 
 search [1] PROCESS =>* < o : Process | tokens: (token(id("f17"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .

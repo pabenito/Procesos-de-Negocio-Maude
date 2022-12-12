@@ -1,13 +1,37 @@
-sload ex-process-3.maude 
+load ex-process-3.maude 
 
----search [1] PROCESS =>* < o : Process | tokens: token(id("f00"), 0), Atts:AttributeSet > .
----search [1] PROCESS =>* < o : Process | tokens: token(id("f03"), 0), Atts:AttributeSet > .
----search [1] PROCESS =>* < o : Process | tokens: token(id("f06"), 0), Atts:AttributeSet > .
----search [1] PROCESS =>* < o : Process | tokens: token(id("f05"), 0), Atts:AttributeSet > .
+---(search [1] PROCESS =>* < o : Process | tokens: token(id("f00"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("f03"), 0), Atts:AttributeSet > .
+
+search [1] PROCESS =>* < o : Process | tokens: token(id("f04"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("f06"), 0), Atts:AttributeSet > .
+
+search [1] PROCESS =>* < o : Process | tokens: token(id("f05"), 0), Atts:AttributeSet > .
 search [1] PROCESS =>* < o : Process | tokens: token(id("f08"), 0), Atts:AttributeSet > .
+
 search [1] PROCESS =>* < o : Process | tokens: token(id("f09"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("n11"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("f13"), 0), Atts:AttributeSet > .
+
 search [1] PROCESS =>* < o : Process | tokens: token(id("f10"), 0), Atts:AttributeSet > .
-search [1] PROCESS =>* < o : Process | tokens: (token(id("n11"), 0), TokenSet:Set{Token}), Atts:AttributeSet > .
-search [1] PROCESS =>* < o : Process | tokens: (token(id("n14"), 0), TokenSet:Set{Token}), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("n14"), 0), Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: token(id("f11"), 0), Atts:AttributeSet > .)
+
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f14"), 0), token(id("f15"), 0), token(id("f16"), 0)) , Atts:AttributeSet > .
+
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f24"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f17"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f21"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f20"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f22"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+
+search [1] PROCESS =>* < o : Process | tokens: (token(id("n21"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: (token(id("n22"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f27"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+search [1] PROCESS =>* < o : Process | tokens: (token(id("f28"), 0), TokenSet:Set{Token}) , Atts:AttributeSet > .
+
 
 ---search [1] PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .

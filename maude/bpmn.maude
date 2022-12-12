@@ -157,6 +157,7 @@ mod BPMN-SEM is
     --- Quita un recurso a todos los que estén en el set de Id
     op removeResources : Set{Resource} Set{Id} -> Set{Resource} .   
     eq removeResources (empty, IdSet) = empty .
+    eq removeResources (ResourceSet, empty) = ResourceSet .
     eq removeResources ((resource(id1, N, s N'), ResourceSet), IdSet) =
     if id1 in IdSet then
         resource(id1, N, N'), removeResources(ResourceSet, IdSet)

@@ -1,3 +1,9 @@
 load ex-process-3.maude 
 
-search PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .
+search PROCESS =>* < o : Process | tokens: empty, Atts:AttributeSet > .
+
+---(search PROCESS =>! < o : Process | Atts:AttributeSet > . --- 47 estados
+search PROCESS =>! < o : Process | Atts:AttributeSet, gtime: 100 > . --- 21 estados
+search PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > . --- 26 estados) 
+
+

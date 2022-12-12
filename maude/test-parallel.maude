@@ -1,4 +1,0 @@
-load parallel.maude
-
-rew PROCESS .
-search PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .

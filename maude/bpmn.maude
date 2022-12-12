@@ -118,7 +118,7 @@ mod BPMN-SEM is
     ceq isTokenSetReady (empty, IdSet) = false 
         if IdSet =/= empty .
     eq isTokenSetReady ((token(id1, T), TokenSet), (id1, IdSet)) = 
-        T =/= 0 and isTokenSetReady(TokenSet, IdSet) .
+        T == 0 and isTokenSetReady(TokenSet, IdSet) .
 
     --- Devuelve lista de Tokens que no están en el set de Id's
     op findTokensNotInIdSet : Set{Token} Set{Id} -> Set{Token} .

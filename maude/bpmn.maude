@@ -179,12 +179,17 @@ mod BPMN-SEM is
     ******************************
     op delta : Set{Token} Time -> Set{Token} .
     eq delta (empty, T) = empty .
-    ceq delta ((token(id1, T), TokenSet), T') = (token(id1, T monus T'), delta(TokenSet, T')) if T gt T' .
+    ceq delta ((token(id1, T), TokenSet), T') = (token(id1, T monus T'), delta(TokenSet, T')) 
+        if T gt T' .
     eq delta ((token(id1, T), TokenSet), T') = (token(id1, 0), delta(TokenSet, T')) [owise] .
 
     op mte : Set{Token} -> TimeInf .
-    eq mte ((token(id1, T), empty)) = T .
-    eq mte ((token(id1, T), TokenSet)) = minimum(T, mte(TokenSet)) .
+    eq mte (empty) = INF .
+    eq mte (token(id1, 0)) = INF . 
+    ceq mte (token(id1, T)) = T 
+        if T =/= 0 .
+    ceq mte ((token(id1, T), TokenSet)) = minimum(mte(token(id1, T)), mte(TokenSet))
+        if TokenSet =/= empty .
 
 	crl [tick] :
     	< O : Process | gtime: T, tokens: TokenSet, Atts >

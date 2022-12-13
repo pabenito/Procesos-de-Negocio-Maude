@@ -195,7 +195,8 @@ mod BPMN-SEM is
 	crl [tick] :
     	< O : Process | gtime: T, tokens: TokenSet, Atts >
     	=> < O : Process | gtime: T plus T', tokens: delta(TokenSet, T'), Atts >
-	if T' := mte(TokenSet) /\ 0 lt T' .
+	if T' := mte(TokenSet) /\ 0 lt T' 
+    /\ T plus T' le 200 .
 
 
     *****************************
@@ -265,7 +266,7 @@ mod BPMN-PREDS is
     var id : Id .
     var TokenSet : Set{Token} . 
 
-    ceq < O : Process | gtime: T, Atts > |= before(T') 
+    ceq < O : Process | gtime: T, Atts > |= before(T') = true 
         if T lt T' . 
     eq < O : Process | tokens: empty, Atts > |= noTokens = true .
     eq < O : Process | tokens: (token(id, N), TokenSet), Atts > |= at(id) = true .

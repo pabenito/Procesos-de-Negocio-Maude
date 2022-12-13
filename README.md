@@ -47,4 +47,25 @@ search PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .
 search PROCESS =>* < o : Process | tokens: empty, Atts:AttributeSet > .
 ```
 
-**Resultado**: 26 estados
+## Capturas de pantalla 
+
+![](./img/1-s1,2.png)
+
+![](./img/1-s4,5.png)
+
+![](./img/1-s11,12.png)
+
+![](./img/1-s25,26.png)
+
+![](./img/2-!-s1,2.png)
+
+![](./img/2-!-s46,47.png)
+
+![](./img/2-t100-s1,2.png)
+
+![](./img/2-t100-s20,21.png)
+
+![](./img/2-tempty-s1,2.png)
+
+![](./img/2-tempty-s25,26.png)
+

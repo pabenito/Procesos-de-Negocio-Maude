@@ -1,4 +1,8 @@
 load parallel.maude
 
 rew PROCESS .
-search PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .
+---search PROCESS =>! < o : Process | tokens: empty, Atts:AttributeSet > .
+
+eof 
+
+red omte(< o : Process | nodes: (start(id("n00"), id("f00")), end(id("n06"), id("f06")), split(id("n01"), parallel, id("f00"), (id("f01"), id("f04"))), merge(id("n05"), parallel, (id("f03"), id("f05")), id("f06")), task(id("n02"), "a", id("f01"), id("f02"), 2, empty), task(id("n03"), "b", id("f02"), id("f03"), 2, empty), task(id("n04"), "c", id("f04"), id("f05"), 2, empty)),flows: (flow(id("f00"), 2), flow(id("f01"), 2), flow(id("f02"), 2), flow(id("f03"), 2), flow(id("f04"), 2), flow(id("f05"), 2), flow(id("f06"), 2)),tokens: (token(id("f05"), 0), token(id("n03"), 2)), gtime: 8,resources: empty >) .

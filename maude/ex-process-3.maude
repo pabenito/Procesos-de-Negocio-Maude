@@ -2,7 +2,7 @@ load bpmn.maude
 ---- bpmn.maude is the name of the file in which the BPMN-SEM module is defined. 
 
 mod BPMN-EX is
-  pr BPMN-CHECK . ---- module with the semantics of BPMN
+  pr BPMN-SEM . ---- module with the semantics of BPMN
 
   op o : -> Oid .
   op PROCESS : -> Object .

@@ -96,6 +96,7 @@ mod BPMN-SEM is
     op gtime:_ :        Time            -> Attribute [gather (&)] .
     op resources:_ :    Set{Resource}   -> Attribute [gather (&)] . 
 
+    var Obj : Object .
     vars O : Oid .
     vars N N' : Nat .
     vars T T' T'' : Time .
@@ -117,6 +118,8 @@ mod BPMN-SEM is
     eq isTokenSetReady (TokenSet, empty) = true .
     ceq isTokenSetReady (empty, IdSet) = false 
         if IdSet =/= empty .
+    ceq isTokenSetReady (TokenSet, IdSet) = false 
+        if not (IdSet subset idsFromTokens(TokenSet)) .
     eq isTokenSetReady ((token(id1, T), TokenSet), (id1, IdSet)) = 
         T == 0 and isTokenSetReady(TokenSet, IdSet) .
 
@@ -184,18 +187,47 @@ mod BPMN-SEM is
         if T gt T' .
     eq delta ((token(id1, T), TokenSet), T') = (token(id1, 0), delta(TokenSet, T')) [owise] .
 
-    op mte : Set{Token} -> TimeInf .
-    eq mte (empty) = INF .
-    eq mte (token(id1, 0)) = INF . 
-    ceq mte (token(id1, T)) = T 
+    op mte : Set{Token} Object -> TimeInf .
+    eq mte (empty, Obj) = INF .
+    eq mte (token(id1, 0), Obj) = 
+        if isBloked(token(id1, 0), Obj) 
+        then INF
+        else 0
+        fi . 
+    ceq mte (token(id1, T), Obj) = T 
         if T =/= 0 .
-    ceq mte ((token(id1, T), TokenSet)) = minimum(mte(token(id1, T)), mte(TokenSet))
+    ceq mte ((token(id1, T), TokenSet), Obj) = minimum(mte(token(id1, T), Obj), mte(TokenSet, Obj))
         if TokenSet =/= empty .
+
+    op isBloked : Token Object -> Bool .
+    eq isBloked(Token, < O : Process | nodes: NodeSet, resources: ResourceSet, Atts >) =
+        isBlokedByResources(Token, NodeSet, ResourceSet) 
+        or isBlokedByParallel(Token, < O : Process | nodes: NodeSet, resources: ResourceSet, Atts >) .
+
+    op isBlokedByResources : Token Set{Node} Set{Resource} -> Bool .
+    ceq isBlokedByResources(token(id1, 0), (task(id2, TaskName, id1, id3, T, IdSet), NodeSet), (resource(id4, N, 0), ResourceSet)) = true
+        if id4 in IdSet .
+    eq isBlokedByResources(Token, NodeSet, ResourceSet) = false [owise] . 
+
+    op isBlokedByParallel : Token Object -> Bool .
+    eq isBlokedByParallel(token(id1, 0), < O : Process | nodes: (merge(id2, parallel, (id1, IdSet), id4), NodeSet), tokens: TokenSet, Atts >) = 
+        not isTokenSetReady(TokenSet, IdSet) .
+    eq isBlokedByParallel(Token, Obj) = false [owise] .
+
+    op idsFromTokens : Set{Token} -> Set{Id} .
+    eq idsFromTokens(empty) = empty .
+    eq idsFromTokens(token(id1, 0)) = id1 .
+    ceq idsFromTokens((Token, TokenSet)) = idsFromTokens(Token), idsFromTokens(TokenSet)
+        if TokenSet =/= empty .
+
+    op omte : Object -> TimeInf .
+    eq omte(< O : Process | tokens: TokenSet, Atts >) = mte(TokenSet, < O : Process | tokens: TokenSet, Atts >) .
 
 	crl [tick] :
     	< O : Process | gtime: T, tokens: TokenSet, Atts >
     	=> < O : Process | gtime: T plus T', tokens: delta(TokenSet, T'), Atts >
-	if T' := mte(TokenSet) /\ 0 lt T' 
+	if T' := mte(TokenSet, < O : Process | gtime: T, tokens: TokenSet, Atts >) 
+    /\ 0 lt T' 
     /\ T plus T' le 200 .
 
 
@@ -247,36 +279,6 @@ mod BPMN-SEM is
 		flows: (flow(id2, T), FlowSet), tokens: (getTokenSetFromFlowSetAndIdSet(FlowSet, IdSet), TokenSet), Atts > .
 endm
 
-load model-checker.maude
-
-mod BPMN-PREDS is
-    protecting BPMN-SEM .
-    including SATISFACTION .
-
-    subsort Object < State .
-
-    op noTokens : -> Prop .
-    op before : Time -> Prop .
-    op at : Id -> Prop .
-
-    vars O : Oid .
-    vars T T' : Time .
-    var N M : Nat .
-    var Atts : AttributeSet .
-    var id : Id .
-    var TokenSet : Set{Token} . 
-
-    ceq < O : Process | gtime: T, Atts > |= before(T') = true 
-        if T lt T' . 
-    eq < O : Process | tokens: empty, Atts > |= noTokens = true .
-    eq < O : Process | tokens: (token(id, N), TokenSet), Atts > |= at(id) = true .
-endm
-
-mod BPMN-CHECK is 
-    protecting BPMN-PREDS .
-    including MODEL-CHECKER .
-    including LTL-SIMPLIFIER .
-endm 
 
 eof
 

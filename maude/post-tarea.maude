@@ -1,4 +1,4 @@
-load ex-process-3.maude 
+---load ex-process-3.maude 
 
 ---red modelCheck(PROCESS, <> noTokens) . ---1
 ---red modelCheck(PROCESS, <> at(id("n14")) -> <> (at(id("n21")) \/ at(id("n22")))) . ---2

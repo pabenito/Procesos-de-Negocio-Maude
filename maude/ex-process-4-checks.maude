@@ -1,1 +1,11 @@
+load ex-process-3.maude 
+
+red modelCheck(PROCESS, <> noTokens) . ---1
+red modelCheck(PROCESS, <> at(id("n14")) -> <> (at(id("n21")) \/ at(id("n22")))) . ---2
+
 load ex-process-4.maude 
+
+search PROCESS =>* < o : Process | tokens: empty, Atts:AttributeSet > . ---3
+search PROCESS =>! < o : Process | Atts:AttributeSet, gtime: N:Nat > s.t. N:Nat < 100 . ---4
+
+

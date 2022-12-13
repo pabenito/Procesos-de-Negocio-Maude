@@ -1,5 +1,10 @@
 load ex-process-3.maude 
 
+mod BPMNSEM is
+    pr BPMN-EX .
+    pr BPMN-CHECK .
+endm
+
 search [1] PROCESS =>* < o : Process | tokens: token(id("f00"), 0), Atts:AttributeSet > .
 search [1] PROCESS =>* < o : Process | tokens: token(id("f03"), 0), Atts:AttributeSet > .
 

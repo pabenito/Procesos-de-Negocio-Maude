@@ -1,0 +1,3 @@
+load ex-process-3.maude 
+
+red modelCheck(PROCESS, <> noTokens) .

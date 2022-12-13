@@ -1,4 +1,4 @@
-sload bpmn.maude 
+load bpmn.maude 
 ---- bpmn.maude is the name of the file in which the BPMN-SEM module is defined. 
 
 mod BPMN-EX is

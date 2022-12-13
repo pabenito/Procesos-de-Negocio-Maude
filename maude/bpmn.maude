@@ -195,8 +195,7 @@ mod BPMN-SEM is
 	crl [tick] :
     	< O : Process | gtime: T, tokens: TokenSet, Atts >
     	=> < O : Process | gtime: T plus T', tokens: delta(TokenSet, T'), Atts >
-	if T' := mte(TokenSet) /\ 0 lt T' 
-    /\ (T plus T') le 100 .
+	if T' := mte(TokenSet) /\ 0 lt T' .
 
 
     *****************************
@@ -246,6 +245,37 @@ mod BPMN-SEM is
 	=> < O : Process | nodes: (split(id1, parallel, id2, IdSet), NodeSet), 
 		flows: (flow(id2, T), FlowSet), tokens: (getTokenSetFromFlowSetAndIdSet(FlowSet, IdSet), TokenSet), Atts > .
 endm
+
+load model-checker.maude
+
+mod BPMN-PREDS is
+    protecting BPMN-SEM .
+    including SATISFACTION .
+
+    subsort Object < State .
+
+    op noTokens : -> Prop .
+    op before : Time -> Prop .
+    op at : Id -> Prop .
+
+    vars O : Oid .
+    vars T T' : Time .
+    var N M : Nat .
+    var Atts : AttributeSet .
+    var id : Id .
+    var TokenSet : Set{Token} . 
+
+    ceq < O : Process | gtime: T, Atts > |= before(T') 
+        if T lt T' . 
+    eq < O : Process | tokens: empty, Atts > |= noTokens = true .
+    eq < O : Process | tokens: (token(id, N), TokenSet), Atts > |= at(id) = true .
+endm
+
+mod BPMN-CHECK is 
+    protecting BPMN-PREDS .
+    including MODEL-CHECKER .
+    including LTL-SIMPLIFIER .
+endm 
 
 eof
 
